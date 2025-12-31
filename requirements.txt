@@ -5,4 +5,13 @@ joblib
 scikit-learn
 pandas
 numpy
+lightgbmfastapi
+uvicorn[standard]
+pydantic
+joblib
+scikit-learn
+pandas
+numpy
 lightgbm
+psycopg2-binary
+python-dotenv
