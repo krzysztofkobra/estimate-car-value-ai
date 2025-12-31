@@ -30,19 +30,19 @@ except Exception as e:
     predictor = None
 
 class CarInput(BaseModel):
-    make: str = Field(..., example="Audi")
-    model: str = Field(..., example="A5")
-    year: int = Field(..., ge=1990, le=2025, example=2013)
-    body_type: Optional[str] = Field(None, example="Coupe")
+    make: str = Field(..., example="audi")
+    model: str = Field(..., example="a5")
+    year: int = Field(..., ge=1990, le=2025, example=2009)
+    body_type: Optional[str] = Field(None, example="coupe")
     fuel: str = Field(..., example="benzyna")
     engine_cc: Optional[int] = Field(None, ge=500, le=10000, example=1984)
     engine_power: Optional[int] = Field(None, ge=30, le=1000, example=211)
-    transmission: Optional[str] = Field(None, example="Automatyczna")
-    drive: Optional[str] = Field(None, example="AWD")
-    mileage: int = Field(..., ge=0, le=1000000, example=150000)
+    transmission: Optional[str] = Field(None, example="manualna")
+    drive: Optional[str] = Field(None, example="awd")
+    mileage: int = Field(..., ge=0, le=1000000, example=345000)
     seller_type: Optional[str] = Field("private", example="private")
     is_damaged: Optional[bool] = Field(False, example=False)
-    color: Optional[str] = Field(None, example="Niebieski")
+    color: Optional[str] = Field(None, example="niebieski")
     right_hand: Optional[bool] = Field(None, example=False)
 
 class PredictionResponse(BaseModel):
@@ -78,6 +78,14 @@ def predict_price(car: CarInput):
     
     try:
         car_dict = car.dict()
+        
+        text_fields = ['make', 'model', 'body_type', 'fuel', 
+                       'transmission', 'drive', 'seller_type', 'color']
+        
+        for field in text_fields:
+            if car_dict.get(field) and isinstance(car_dict[field], str):
+                car_dict[field] = car_dict[field].lower().strip()
+        
         result = predictor.predict(car_dict)
         
         return PredictionResponse(

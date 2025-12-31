@@ -53,21 +53,28 @@ class CarPricePredictor:
 
     def prepare_features(self, df):
         df = df.copy()
+    
+        # NORMALIZUJ TEKST DO LOWERCASE
+        text_columns = ['make', 'model', 'body_type', 'fuel', 
+                        'transmission', 'drive', 'seller_type', 'color']
+        for col in text_columns:
+            if col in df.columns and df[col].dtype == 'object':
+                df[col] = df[col].str.lower().str.strip()
+    
+            if 'year' in df.columns:
+                df['car_age'] = datetime.now().year - df['year']
 
-        if 'year' in df.columns:
-            df['car_age'] = datetime.now().year - df['year']
+            if 'mileage' in df.columns and 'car_age' in df.columns:
+                df['mileage_per_year'] = df['mileage'] / (df['car_age'] + 1)
 
-        if 'mileage' in df.columns and 'car_age' in df.columns:
-            df['mileage_per_year'] = df['mileage'] / (df['car_age'] + 1)
+            if 'engine_power' in df.columns and 'engine_cc' in df.columns:
+                df['power_to_cc_ratio'] = df['engine_power'] / (df['engine_cc'] + 1)
 
-        if 'engine_power' in df.columns and 'engine_cc' in df.columns:
-            df['power_to_cc_ratio'] = df['engine_power'] / (df['engine_cc'] + 1)
-
-        if 'right_hand' in df.columns:
-            df['right_hand'] = df['right_hand'].fillna(False)
-            if df['right_hand'].dtype == 'object':
-                df['right_hand'] = df['right_hand'].astype(str).str.lower().isin(['true', '1', 't'])
-            df['right_hand'] = df['right_hand'].astype(bool)
+            if 'right_hand' in df.columns:
+                df['right_hand'] = df['right_hand'].fillna(False)
+                if df['right_hand'].dtype == 'object':
+                    df['right_hand'] = df['right_hand'].astype(str).str.lower().isin(['true', '1', 't'])
+                df['right_hand'] = df['right_hand'].astype(bool)
 
         return df
 
@@ -259,6 +266,14 @@ class CarPricePredictor:
 
         df = pd.DataFrame([car_data])
 
+        # NORMALIZUJ WEJŚCIE DO LOWERCASE
+        # To kluczowe, bo model był trenowany na małych literach
+        text_columns = ['make', 'model', 'body_type', 'fuel', 
+                        'transmission', 'drive', 'seller_type', 'color']
+        for col in text_columns:
+            if col in df.columns and df[col].dtype == 'object':
+                df[col] = df[col].str.lower().str.strip()
+
         if 'car_age' not in df.columns and 'year' in df.columns:
             df['car_age'] = datetime.now().year - df['year']
 
@@ -350,22 +365,22 @@ if __name__ == "__main__":
     predictor.save_model('car_price_model.pkl')
 
     test_car = {
-        'make': 'Audi',
-        'model': 'A5',
-        'year': 2013,
-        'body_type': 'Coupe',
+        'make': 'audi',
+        'model': 'a5',
+        'year': 2009,
+        'body_type': 'coupe',
         'fuel': 'benzyna',
         'engine_cc': 1984,
         'engine_power': 211,
-        'transmission': 'Automatyczna',
-        'drive': 'AWD',
-        'mileage': 150000,
+        'transmission': 'manualna',
+        'drive': 'fwd',
+        'mileage': 345000,
         'seller_type': 'private',
         'is_damaged': False
     }
 
     result = predictor.predict(test_car)
-    print(f"\n\nExample prediction for Audi A5 2013:")
+    print(f"\n\nExample prediction for Audi A5 2009:")
     print(f"  Predicted price: {result['predicted_price']:,.0f} PLN")
     print(
         f"  Confidence range: {result['confidence_range']['min']:,.0f} - {result['confidence_range']['max']:,.0f} PLN")

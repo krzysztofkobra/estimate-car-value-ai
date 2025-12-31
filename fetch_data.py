@@ -71,6 +71,14 @@ class DataFetcher:
         print("⏳ Fetching data...")
         try:
             df = pd.read_sql(query, conn)
+            
+            # NORMALIZUJ TEKST DO LOWERCASE ZARAZ PO POBRANIU
+            text_columns = ['make', 'model', 'body_type', 'fuel', 
+                            'transmission', 'drive', 'seller_type', 'color']
+            for col in text_columns:
+                if col in df.columns and df[col].dtype == 'object':
+                    df[col] = df[col].str.lower().str.strip()
+
             print(f"✅ Successfully loaded {len(df):,} listings")
             print(f"📊 Fetched {len(df) / total_count * 100:.1f}% of total records")
             return df

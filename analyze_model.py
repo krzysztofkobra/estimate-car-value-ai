@@ -57,8 +57,8 @@ print("\n4. WPŁYW POSZCZEGÓLNYCH CECH (symulacja)")
 print("-" * 80)
 
 base_car = {
-    'make': 'Audi',
-    'model': 'A5',
+    'make': 'audi',
+    'model': 'a5',
     'year': 2009,
     'fuel': 'benzyna',
     'engine_cc': 1984,
@@ -67,7 +67,7 @@ base_car = {
 }
 
 base_price = predictor.predict(base_car)['predicted_price']
-print(f"\nAuto bazowe (Audi A5 2009, 340k km): {base_price:,.0f} PLN")
+print(f"\nAuto bazowe (Audi A5 2009, 345k km): {base_price:,.0f} PLN")
 
 tests = [
     ('Przebieg +50k km', {'mileage': base_car['mileage']+50000}),
@@ -99,21 +99,21 @@ print("\n5. PORÓWNANIE POPULARNYCH MODELI AUT (2016, 100k km)")
 print("-" * 80)
 
 popular_cars = [
-    {'make': 'Toyota', 'model': 'Corolla', 'engine_cc': 1600, 'engine_power': 132},
-    {'make': 'Volkswagen', 'model': 'Golf', 'engine_cc': 1400, 'engine_power': 122},
-    {'make': 'BMW', 'model': '3', 'engine_cc': 2000, 'engine_power': 184},
-    {'make': 'Audi', 'model': 'A4', 'engine_cc': 2000, 'engine_power': 190},
-    {'make': 'Mercedes-Benz', 'model': 'C', 'engine_cc': 2000, 'engine_power': 184},
-    {'make': 'Skoda', 'model': 'Octavia', 'engine_cc': 1400, 'engine_power': 150},
-    {'make': 'Ford', 'model': 'Focus', 'engine_cc': 1600, 'engine_power': 125},
-    {'make': 'Opel', 'model': 'Astra', 'engine_cc': 1400, 'engine_power': 140},
-    {'make': 'Renault', 'model': 'Megane', 'engine_cc': 1500, 'engine_power': 110},
-    {'make': 'Peugeot', 'model': '308', 'engine_cc': 1600, 'engine_power': 120},
-    {'make': 'Hyundai', 'model': 'i30', 'engine_cc': 1400, 'engine_power': 140},
-    {'make': 'Kia', 'model': 'Ceed', 'engine_cc': 1400, 'engine_power': 140},
-    {'make': 'Mazda', 'model': '3', 'engine_cc': 2000, 'engine_power': 165},
-    {'make': 'Honda', 'model': 'Civic', 'engine_cc': 1800, 'engine_power': 142},
-    {'make': 'Nissan', 'model': 'Qashqai', 'engine_cc': 1600, 'engine_power': 130},
+    {'make': 'toyota', 'model': 'corolla', 'engine_cc': 1600, 'engine_power': 132},
+    {'make': 'volkswagen', 'model': 'golf', 'engine_cc': 1400, 'engine_power': 122},
+    {'make': 'bmw', 'model': '3', 'engine_cc': 2000, 'engine_power': 184},
+    {'make': 'audi', 'model': 'a4', 'engine_cc': 2000, 'engine_power': 190},
+    {'make': 'mercedes-benz', 'model': 'c', 'engine_cc': 2000, 'engine_power': 184},
+    {'make': 'skoda', 'model': 'octavia', 'engine_cc': 1400, 'engine_power': 150},
+    {'make': 'ford', 'model': 'focus', 'engine_cc': 1600, 'engine_power': 125},
+    {'make': 'opel', 'model': 'astra', 'engine_cc': 1400, 'engine_power': 140},
+    {'make': 'renault', 'model': 'megane', 'engine_cc': 1500, 'engine_power': 110},
+    {'make': 'peugeot', 'model': '308', 'engine_cc': 1600, 'engine_power': 120},
+    {'make': 'hyundai', 'model': 'i30', 'engine_cc': 1400, 'engine_power': 140},
+    {'make': 'kia', 'model': 'ceed', 'engine_cc': 1400, 'engine_power': 140},
+    {'make': 'mazda', 'model': '3', 'engine_cc': 2000, 'engine_power': 165},
+    {'make': 'honda', 'model': 'civic', 'engine_cc': 1800, 'engine_power': 142},
+    {'make': 'nissan', 'model': 'qashqai', 'engine_cc': 1600, 'engine_power': 130},
 ]
 
 car_prices = []
@@ -146,19 +146,19 @@ print("-" * 80)
 
 segments = [
     ('Compact/Hatchback', [
-        {'make': 'Volkswagen', 'model': 'Golf', 'body_type': 'compact', 'engine_power': 122},
-        {'make': 'Toyota', 'model': 'Corolla', 'body_type': 'compact', 'engine_power': 132},
-        {'make': 'Ford', 'model': 'Focus', 'body_type': 'compact', 'engine_power': 125},
+        {'make': 'volkswagen', 'model': 'golf', 'body_type': 'compact', 'engine_power': 122},
+        {'make': 'toyota', 'model': 'corolla', 'body_type': 'compact', 'engine_power': 132},
+        {'make': 'ford', 'model': 'focus', 'body_type': 'compact', 'engine_power': 125},
     ]),
     ('Sedan Premium', [
-        {'make': 'BMW', 'model': '3', 'body_type': 'sedan', 'engine_power': 184},
-        {'make': 'Audi', 'model': 'A4', 'body_type': 'sedan', 'engine_power': 190},
-        {'make': 'Mercedes-Benz', 'model': 'C', 'body_type': 'sedan', 'engine_power': 184},
+        {'make': 'bmw', 'model': '3', 'body_type': 'sedan', 'engine_power': 184},
+        {'make': 'audi', 'model': 'a4', 'body_type': 'sedan', 'engine_power': 190},
+        {'make': 'mercedes-benz', 'model': 'c', 'body_type': 'sedan', 'engine_power': 184},
     ]),
     ('SUV', [
-        {'make': 'Toyota', 'model': 'RAV4', 'body_type': 'suv', 'engine_power': 175},
-        {'make': 'Nissan', 'model': 'Qashqai', 'body_type': 'suv', 'engine_power': 130},
-        {'make': 'Volkswagen', 'model': 'Tiguan', 'body_type': 'suv', 'engine_power': 150},
+        {'make': 'toyota', 'model': 'rav4', 'body_type': 'suv', 'engine_power': 175},
+        {'make': 'nissan', 'model': 'qashqai', 'body_type': 'suv', 'engine_power': 130},
+        {'make': 'volkswagen', 'model': 'tiguan', 'body_type': 'suv', 'engine_power': 150},
     ])
 ]
 
@@ -189,8 +189,8 @@ print("\n7. WPŁYW WIEKU AUTA (VW Golf 1.4 TSI, 100k km)")
 print("-" * 80)
 
 base_car = {
-    'make': 'Volkswagen',
-    'model': 'Golf',
+    'make': 'volkswagen',
+    'model': 'golf',
     'fuel': 'benzyna',
     'engine_cc': 1400,
     'engine_power': 122,
@@ -219,8 +219,8 @@ print("\n8. WPŁYW PRZEBIEGU (VW Golf 2016, różne przebiegi)")
 print("-" * 80)
 
 base_car = {
-    'make': 'Volkswagen',
-    'model': 'Golf',
+    'make': 'volkswagen',
+    'model': 'golf',
     'year': 2016,
     'fuel': 'benzyna',
     'engine_cc': 1400,
@@ -249,8 +249,8 @@ print("\n9. PORÓWNANIE PALIW (VW Golf 2016, 2.0L)")
 print("-" * 80)
 
 base_car = {
-    'make': 'Volkswagen',
-    'model': 'Golf',
+    'make': 'volkswagen',
+    'model': 'golf',
     'year': 2016,
     'engine_cc': 2000,
     'engine_power': 150,
@@ -281,15 +281,15 @@ print("\n10. PREMIUM vs BUDGET (porównanie klas)")
 print("-" * 80)
 
 premium_cars = [
-    {'make': 'BMW', 'model': '5', 'engine_power': 245},
-    {'make': 'Audi', 'model': 'A6', 'engine_power': 252},
-    {'make': 'Mercedes-Benz', 'model': 'E', 'engine_power': 245},
+    {'make': 'bmw', 'model': '5', 'engine_power': 245},
+    {'make': 'audi', 'model': 'a6', 'engine_power': 252},
+    {'make': 'mercedes-benz', 'model': 'e', 'engine_power': 245},
 ]
 
 budget_cars = [
-    {'make': 'Dacia', 'model': 'Logan', 'engine_power': 90},
-    {'make': 'Skoda', 'model': 'Fabia', 'engine_power': 95},
-    {'make': 'Fiat', 'model': 'Panda', 'engine_power': 69},
+    {'make': 'dacia', 'model': 'logan', 'engine_power': 90},
+    {'make': 'skoda', 'model': 'fabia', 'engine_power': 95},
+    {'make': 'fiat', 'model': 'panda', 'engine_power': 69},
 ]
 
 print("\nPremium (2016, 100k km):")
@@ -334,6 +334,8 @@ if premium_prices and budget_prices:
     premium_avg = np.mean(premium_prices)
     budget_avg = np.mean(budget_prices)
     diff = premium_avg - budget_avg
-    print(f"\nRóżnica średnia: {diff:,.0f} PLN ({(diff / budget_avg) * 100:.1f}%)")
+    print(f"\nRóżnica średnia: {diff:,.0f} PLN")
+    print(f"Premium jest droższe o: {(diff / budget_avg) * 100:.1f}%")
+    print(f"Budget jest tańsze o: {(diff / premium_avg) * 100:.1f}%")
 
 print("\n" + "=" * 80)
