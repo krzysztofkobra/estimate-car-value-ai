@@ -1,6 +1,5 @@
 .env
 __pycache__/
-*.pkl
 .DS_Store
 .idea/
 venv/
