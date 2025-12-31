@@ -1,11 +1,24 @@
 import os
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 import joblib
 from car_price_model import CarPricePredictor
 
 app = FastAPI(title="Car Price Prediction API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:8080",
+        "http://localhost:3000",
+        "https://auto-worth-ai.vercel.app"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 predictor = CarPricePredictor()
 
