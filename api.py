@@ -1,10 +1,18 @@
 import os
+import logging
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
 import joblib
 from car_price_model import CarPricePredictor
+
+# Konfiguracja loggera
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Car Price Prediction API")
 
@@ -79,6 +87,9 @@ def predict_price(car: CarInput):
     try:
         car_dict = {k: v for k, v in car.dict().items() if v is not None}
         
+        # Logowanie otrzymanych danych
+        logger.info(f"Otrzymano żądanie predykcji: {car_dict}")
+        
         text_fields = ['make', 'model', 'body_type', 'fuel', 
                        'transmission', 'drive', 'seller_type', 'color']
         
@@ -88,12 +99,16 @@ def predict_price(car: CarInput):
         
         result = predictor.predict(car_dict)
         
+        # Logowanie zwróconego wyniku
+        logger.info(f"Zwrócono predykcję: cena={result['predicted_price']:.2f} PLN, zakres={result['confidence_range']}")
+        
         return PredictionResponse(
             predicted_price=result['predicted_price'],
             confidence_range=result['confidence_range'],
             input_data=car_dict
         )
     except Exception as e:
+        logger.error(f"Błąd podczas predykcji: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 if __name__ == "__main__":
