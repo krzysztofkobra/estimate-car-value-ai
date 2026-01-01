@@ -77,7 +77,7 @@ def predict_price(car: CarInput):
         raise HTTPException(status_code=503, detail="Model not loaded")
     
     try:
-        car_dict = car.dict()
+        car_dict = {k: v for k, v in car.dict().items() if v is not None}
         
         text_fields = ['make', 'model', 'body_type', 'fuel', 
                        'transmission', 'drive', 'seller_type', 'color']
