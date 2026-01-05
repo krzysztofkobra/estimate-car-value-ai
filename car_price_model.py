@@ -54,7 +54,7 @@ class CarPricePredictor:
     def prepare_features(self, df):
         df = df.copy()
     
-        # NORMALIZUJ TEKST DO LOWERCASE
+        # Normalize text to lowercase
         text_columns = ['make', 'model', 'body_type', 'fuel', 
                         'transmission', 'drive', 'seller_type', 'color']
         for col in text_columns:
@@ -266,8 +266,7 @@ class CarPricePredictor:
 
         df = pd.DataFrame([car_data])
 
-        # NORMALIZUJ WEJŚCIE DO LOWERCASE
-        # To kluczowe, bo model był trenowany na małych literach
+        # Normalize input to lowercase (critical: model was trained on lowercase text)
         text_columns = ['make', 'model', 'body_type', 'fuel', 
                         'transmission', 'drive', 'seller_type', 'color']
         for col in text_columns:

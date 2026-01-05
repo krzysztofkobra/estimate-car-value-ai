@@ -7,7 +7,6 @@ from typing import Optional
 import joblib
 from car_price_model import CarPricePredictor
 
-# Konfiguracja loggera
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
@@ -15,18 +14,6 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Car Price Prediction API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=[
-        "http://localhost:8080",
-        "http://localhost:3000",
-        "https://auto-worth-ai.vercel.app"
-    ],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
 
 predictor = CarPricePredictor()
 
@@ -87,8 +74,7 @@ def predict_price(car: CarInput):
     try:
         car_dict = {k: v for k, v in car.dict().items() if v is not None}
         
-        # Logowanie otrzymanych danych
-        logger.info(f"Otrzymano żądanie predykcji: {car_dict}")
+        logger.info(f"Received prediction request: {car_dict}")
         
         text_fields = ['make', 'model', 'body_type', 'fuel', 
                        'transmission', 'drive', 'seller_type', 'color']
@@ -98,9 +84,8 @@ def predict_price(car: CarInput):
                 car_dict[field] = car_dict[field].lower().strip()
         
         result = predictor.predict(car_dict)
-        
-        # Logowanie zwróconego wyniku
-        logger.info(f"Zwrócono predykcję: cena={result['predicted_price']:.2f} PLN, zakres={result['confidence_range']}")
+
+        logger.info(f"Returned prediction: price={result['predicted_price']:.2f} PLN, range={result['confidence_range']}")
         
         return PredictionResponse(
             predicted_price=result['predicted_price'],
@@ -108,7 +93,7 @@ def predict_price(car: CarInput):
             input_data=car_dict
         )
     except Exception as e:
-        logger.error(f"Błąd podczas predykcji: {str(e)}")
+        logger.error(f"Prediction error: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Prediction error: {str(e)}")
 
 if __name__ == "__main__":

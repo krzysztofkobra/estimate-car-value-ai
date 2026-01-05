@@ -2,7 +2,6 @@ import pandas as pd
 import psycopg2
 from datetime import datetime
 
-
 class DataFetcher:
     def __init__(self, db_params):
         self.db_params = db_params
@@ -24,7 +23,7 @@ class DataFetcher:
             'Price > 0': 'SELECT COUNT(*) FROM car_listings WHERE price > 0'
         }
 
-        print("\n📊 Database Statistics:")
+        print("\nDatabase Statistics:")
         for label, query in queries.items():
             cursor.execute(query)
             count = cursor.fetchone()[0]
@@ -39,7 +38,7 @@ class DataFetcher:
 
         cursor.execute('SELECT COUNT(*) FROM car_listings')
         total_count = cursor.fetchone()[0]
-        print(f"\n📈 Total records in database: {total_count:,}")
+        print(f"\nTotal records in database: {total_count:,}")
 
         query = """
         SELECT 
@@ -68,22 +67,22 @@ class DataFetcher:
         FROM car_listings
         """
 
-        print("⏳ Fetching data...")
+        print("Fetching data...")
         try:
             df = pd.read_sql(query, conn)
             
-            # NORMALIZUJ TEKST DO LOWERCASE ZARAZ PO POBRANIU
+            # Normalize text to lowercase
             text_columns = ['make', 'model', 'body_type', 'fuel', 
                             'transmission', 'drive', 'seller_type', 'color']
             for col in text_columns:
                 if col in df.columns and df[col].dtype == 'object':
                     df[col] = df[col].str.lower().str.strip()
 
-            print(f"✅ Successfully loaded {len(df):,} listings")
-            print(f"📊 Fetched {len(df) / total_count * 100:.1f}% of total records")
+            print(f"Successfully loaded {len(df):,} listings")
+            print(f"Fetched {len(df) / total_count * 100:.1f}% of total records")
             return df
         except Exception as e:
-            print(f"❌ Error fetching data: {e}")
+            print(f"Error fetching data: {e}")
             return pd.DataFrame()
         finally:
             cursor.close()
