@@ -1,10 +1,10 @@
 # Car Price Prediction API
 
-AI-powered car price prediction microservice using LightGBM machine learning. This service is part of the [autoanaliza.pl](https://www.autoanaliza.pl) platform.
+AI-powered car price prediction microservice using LightGBM machine learning. This service is part of the [autoanaliza.pl](https://autoanaliza.pl) platform.
 
 ## 🚀 Live Demo
 
-Try it live at **[www.autoanaliza.pl](https://www.autoanaliza.pl)** - create a free account to test the AI price predictions in action!
+Try it live at **[www.autoanaliza.pl](https://autoanaliza.pl)** - create a free account to test the AI price predictions in action!
 
 ## Overview
 
@@ -13,7 +13,7 @@ This microservice provides real-time car price predictions based on vehicle spec
 ### Key Features
 
 - **Fast predictions**: < 10ms response time per vehicle
-- **Accuracy**: ~9,003 PLN MAE on test set
+- **Accuracy**: ~8,800 PLN MAE on test set
 - **Handles missing data**: Works with incomplete vehicle information
 - **RESTful API**: Easy integration via FastAPI
 - **Automatic feature engineering**: Creates derived features for better predictions
@@ -168,8 +168,8 @@ curl -X POST "http://localhost:8000/predict" \
 
 ## Model Performance
 
-Trained on ~270,000 car listings:
-- **MAE (Mean Absolute Error)**: 9,003 PLN
+Trained on ~320,000 car listings:
+- **MAE (Mean Absolute Error)**: 8,800 PLN
 - **R² Score**: 0.9
 - **Training time**: 2 minutes
 - **Prediction time**: < 10ms per vehicle
