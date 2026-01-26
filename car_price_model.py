@@ -265,8 +265,7 @@ class CarPricePredictor:
             raise ValueError("Model not trained yet. Call train() first.")
 
         df = pd.DataFrame([car_data])
-
-        # Normalize input to lowercase (critical: model was trained on lowercase text)
+        
         text_columns = ['make', 'model', 'body_type', 'fuel', 
                         'transmission', 'drive', 'seller_type', 'color']
         for col in text_columns:
