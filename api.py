@@ -15,6 +15,21 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Car Price Prediction API")
 
+origins = [
+    "https://autoanaliza.pl",
+    "https://www.autoanaliza.pl",
+    "http://autoanaliza.pl",
+    "http://www.autoanaliza.pl",
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 predictor = CarPricePredictor()
 
 try:
