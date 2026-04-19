@@ -13,7 +13,7 @@ This microservice provides real-time car price predictions based on vehicle spec
 ### Key Features
 
 - **Fast predictions**: < 10ms response time per vehicle
-- **Accuracy**: ~8,800 PLN MAE on test set
+- **Accuracy**: ~8,277 PLN MAE on test set
 - **Handles missing data**: Works with incomplete vehicle information
 - **RESTful API**: Easy integration via FastAPI
 - **Automatic feature engineering**: Creates derived features for better predictions
@@ -22,7 +22,7 @@ This microservice provides real-time car price predictions based on vehicle spec
 
 - **Python 3.12**
 - **FastAPI** - Modern web framework for building APIs
-- **LightGBM** - Gradient boosting framework for machine learning
+- **LightGBM** - Gradient boosting framework for machine learnings
 - **PostgreSQL** - Database for car listings
 - **scikit-learn** - Machine learning utilities
 - **pandas & numpy** - Data processing
@@ -168,8 +168,8 @@ curl -X POST "http://localhost:8000/predict" \
 
 ## Model Performance
 
-Trained on ~320,000 car listings:
-- **MAE (Mean Absolute Error)**: 8,800 PLN
+Trained on ~636,000 car listings:
+- **MAE (Mean Absolute Error)**: 8,277 PLN
 - **R² Score**: 0.9
 - **Training time**: 2 minutes
 - **Prediction time**: < 10ms per vehicle
