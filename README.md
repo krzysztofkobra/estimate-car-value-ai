@@ -4,7 +4,7 @@ AI-powered car price prediction microservice using LightGBM machine learning. Th
 
 ## 🚀 Live Demo
 
-Try it live at **[www.autoanaliza.pl](https://autoanaliza.pl)** - create a free account to test the AI price predictions in action!
+Try it live at **[autoanaliza.pl](https://autoanaliza.pl)** - create a free account to test the AI price predictions in action!
 
 ## Overview
 
