@@ -1,8 +1,6 @@
 import pandas as pd
 import numpy as np
 from car_price_model import CarPricePredictor
-import matplotlib.pyplot as plt
-import seaborn as sns
 
 predictor = CarPricePredictor()
 predictor.load_model('car_price_model.pkl')

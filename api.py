@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
@@ -42,7 +43,7 @@ except Exception as e:
 class CarInput(BaseModel):
     make: str = Field(..., example="audi")
     model: str = Field(..., example="a5")
-    year: int = Field(..., ge=1990, le=2025, example=2009)
+    year: int = Field(..., ge=1990, example=2009)  # górna granica sprawdzana dynamicznie (rok+1)
     body_type: Optional[str] = Field(None, example="coupe")
     fuel: str = Field(..., example="benzyna")
     engine_cc: Optional[int] = Field(None, ge=500, le=10000, example=1984)
@@ -85,7 +86,13 @@ def health_check():
 def predict_price(car: CarInput):
     if predictor is None or predictor.model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
+
+    # Dynamiczna górna granica roku (rok bieżący + 1) — zamiast sztywnego le=2025,
+    # który odrzucał nowe roczniki (np. 2026) po przełomie roku.
+    max_year = datetime.now().year + 1
+    if car.year > max_year:
+        raise HTTPException(status_code=422, detail=f"year musi być <= {max_year}")
+
     try:
         car_dict = {k: v for k, v in car.dict().items() if v is not None}
         

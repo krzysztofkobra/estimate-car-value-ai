@@ -1,3 +1,6 @@
+# UWAGA (P0): wersje niepinowane. Przypnij do wersji, które wytworzyły car_price_model.pkl
+# — zwłaszcza scikit-learn / lightgbm / numpy / joblib (pickle jest wrażliwy na wersje).
+# Zweryfikuj load modelu w czystym buildzie PRZED deployem. Patrz PLAN-ROZWOJU.md.
 fastapi
 uvicorn[standard]
 pydantic
