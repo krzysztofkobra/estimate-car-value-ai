@@ -14,3 +14,5 @@ jobs:
       - run: pip install -r requirements.txt
       - name: Compile check
         run: python -m py_compile car_price_model.py api.py analyze_model.py fetch_data.py
+      - name: Model tests (kontrakt + niezmienniki)
+        run: python test_predictions.py

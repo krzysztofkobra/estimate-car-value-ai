@@ -4,9 +4,21 @@ import lightgbm as lgb
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
-import psycopg2
 from datetime import datetime
 import json
+import re
+import hashlib
+
+
+def extract_voivodeship(text):
+    """Wyciąga województwo z raw_location formatu 'Miasto (Województwo)'.
+    Zwraca lowercase nazwę lub None. Używane spójnie w treningu i inference."""
+    if not text or not isinstance(text, str):
+        return None
+    m = re.search(r'\(([^)]+)\)', text)
+    if m:
+        return m.group(1).strip().lower()
+    return None
 
 
 class CarPricePredictor:
@@ -18,7 +30,23 @@ class CarPricePredictor:
         self.stats = {}
 
     def connect_db(self, connection_params):
+        # Import leniwy: API (predykcja) nie potrzebuje sterownika DB — tylko trening.
+        import psycopg2
         return psycopg2.connect(**connection_params)
+
+    @staticmethod
+    def _read_sql(query, conn):
+        # pandas 3.x potrafi wymagać SQLAlchemy dla surowego połączenia DBAPI —
+        # fallback na zwykły kursor czyni trening niezależnym od wersji pandas.
+        try:
+            return pd.read_sql(query, conn)
+        except Exception:
+            cur = conn.cursor()
+            cur.execute(query)
+            cols = [d[0] for d in cur.description]
+            rows = cur.fetchall()
+            cur.close()
+            return pd.DataFrame(rows, columns=cols)
 
     def load_data(self, connection_params):
         conn = self.connect_db(connection_params)
@@ -40,6 +68,7 @@ class CarPricePredictor:
             is_damaged,
             color,
             right_hand,
+            raw_location,
             price
         FROM car_listings
         WHERE price > 1000
@@ -48,7 +77,7 @@ class CarPricePredictor:
             AND is_active = true
         """
 
-        df = pd.read_sql(query, conn)
+        df = self._read_sql(query, conn)
         conn.close()
 
         print(f"Loaded {len(df)} records from database")
@@ -65,6 +94,11 @@ class CarPricePredictor:
         for col in text_columns:
             if col in df.columns and df[col].dtype == 'object':
                 df[col] = df[col].str.lower().str.strip()
+
+        # Województwo z raw_location (np. "Warszawa (Mazowieckie)") — cecha pod ceny regionalne.
+        # Aktywuje się dopiero gdy 'voivodeship' jest w feature_columns (po retreningu); stary .pkl ignoruje.
+        if 'raw_location' in df.columns:
+            df['voivodeship'] = df['raw_location'].apply(extract_voivodeship)
 
         # Cechy inżynierowane — DEDENTOWANE poza pętlę (wcześniej błędnie liczone N razy w pętli text_columns).
         # car_age liczone względem reference_year (zapisanego przy treningu) — spójne train/inference, brak driftu.
@@ -96,17 +130,22 @@ class CarPricePredictor:
         print("Engineering features...")
         df = self.prepare_features(df, reference_year=reference_year)
 
+        # Gwarancja istnienia kolumny (gdyby raw_location nie było w danych).
+        if 'voivodeship' not in df.columns:
+            df['voivodeship'] = None
+
         feature_cols = [
             'make', 'model', 'year', 'body_type', 'fuel',
             'engine_cc', 'engine_power', 'transmission', 'drive',
             'mileage', 'seller_type', 'is_damaged', 'color', 'right_hand',
+            'voivodeship',
             'car_age', 'mileage_per_year', 'power_to_cc_ratio',
             'make_avg_price', 'model_avg_price'
         ]
 
         self.categorical_features = [
             'make', 'model', 'body_type', 'fuel',
-            'transmission', 'drive', 'seller_type', 'color'
+            'transmission', 'drive', 'seller_type', 'color', 'voivodeship'
         ]
 
         X = df.drop(columns=['price'])
@@ -251,6 +290,16 @@ class CarPricePredictor:
             'confidence_level': 0.8
         })
 
+        # Wersjonowanie / reprodukowalność: wersja biblioteki, hash danych treningowych, etykieta modelu.
+        self.stats['lightgbm_version'] = lgb.__version__
+        try:
+            self.stats['training_data_hash'] = hashlib.sha256(
+                pd.util.hash_pandas_object(X_train, index=True).values.tobytes()
+            ).hexdigest()[:16]
+        except Exception:
+            self.stats['training_data_hash'] = None
+        self.stats['model_version'] = f"{self.stats['training_date']}_qP10P50P90"
+
         return {'test': {'mae': test_mae, 'rmse': test_rmse, 'r2': test_r2, 'mape': test_mape, 'coverage': coverage}}
 
     def _build_features_for_predict(self, car_data):
@@ -287,6 +336,11 @@ class CarPricePredictor:
 
             df['model_avg_price'] = df.apply(get_model_price, axis=1)
 
+        # Województwo do predykcji — tylko gdy model trenowany z tą cechą (po retreningu).
+        if 'voivodeship' in (self.feature_columns or []) and 'voivodeship' not in df.columns:
+            loc = car_data.get('location') or car_data.get('raw_location')
+            df['voivodeship'] = extract_voivodeship(loc) if isinstance(loc, str) else None
+
         for col in self.feature_columns:
             if col not in df.columns:
                 df[col] = None if col in self.categorical_features else 0
@@ -295,6 +349,26 @@ class CarPricePredictor:
         for col in self.categorical_features:
             X[col] = X[col].astype('category')
         return X
+
+    def _model_version(self):
+        return self.stats.get('model_version') or self.stats.get('training_date')
+
+    def _explain(self, X, top_n=5):
+        """Top kontrybutorzy predykcji (LightGBM pred_contrib / SHAP). Defensywnie — błąd → None.
+        'impact' jest w jednostkach modelu (log-cena dla kwantylowego), interpretuj jako kierunek+siłę."""
+        try:
+            booster = (self.models or {}).get('median') or self.model
+            if booster is None or not self.feature_columns:
+                return None
+            contribs = booster.predict(X, pred_contrib=True)[0]  # n_features + 1 (bias na końcu)
+            pairs = list(zip(self.feature_columns, contribs[:-1]))
+            pairs.sort(key=lambda kv: abs(kv[1]), reverse=True)
+            return [
+                {'feature': f, 'direction': 'up' if c > 0 else 'down', 'impact': round(float(c), 4)}
+                for f, c in pairs[:top_n]
+            ]
+        except Exception:
+            return None
 
     def predict(self, car_data):
         if self.model is None and not self.models:
@@ -312,14 +386,17 @@ class CarPricePredictor:
                 'predicted_price': p_med,
                 'confidence_range': {'min': max(0.0, lo), 'max': hi},
                 'confidence_level': self.stats.get('confidence_level', 0.8),
-                'model_version': self.stats.get('training_date')
+                'model_version': self._model_version(),
+                'explanation': self._explain(X)
             }
 
         # BACKWARD-COMPAT: stary pojedynczy model (raw price) — sztywny ±15% jak dawniej.
         prediction = float(self.model.predict(X)[0])
         return {
             'predicted_price': prediction,
-            'confidence_range': {'min': float(prediction * 0.85), 'max': float(prediction * 1.15)}
+            'confidence_range': {'min': float(prediction * 0.85), 'max': float(prediction * 1.15)},
+            'model_version': self._model_version(),
+            'explanation': self._explain(X)
         }
 
     def save_model(self, filepath='car_price_model.pkl'):

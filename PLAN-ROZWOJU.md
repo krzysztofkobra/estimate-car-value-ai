@@ -29,5 +29,16 @@ Priorytety: **P0** poprawność/trust/nie-psuj-deploya · **P1** sygnał/MLOps/s
 - **Prediction logging** — substrat w `valuations` istnieje; dopełnij confidence_score+model_version; structured log po stronie ML. [S]
 - **Drift monitoring** — join `valuations` ⋈ `car_listings` (relist/sale) → realny MAPE w czasie → trigger retreningu; + input-feature drift. [L]
 
-## Wymaga zewn./infra (flaga)
-Creds do live Postgres (trening — `.env` gitignored, nieobecny tutaj) · object storage (registry) · proxy pool (scraper) · Redis (kolejka) · scheduler (retraining/cron) · znalezienie bulk-ingestion pipeline (poza repo).
+## ZREALIZOWANE — FAZA 9 (kontynuacja, weryfikowane na zainstalowanych libach)
+- **requirements.txt PRZYPIĘTE** do wersji zweryfikowanych: ładują commitowany `.pkl` + predict + start API (lightgbm 4.6.0, scikit-learn 1.8.0, pandas 3.0.3, numpy 2.4.6, joblib 1.5.3, fastapi 0.136.3, pydantic 2.13.4, …).
+- **X-API-Key na /predict** — opt-in (`API_KEY` env; gdy nieustawiony → auth wyłączony, backward-compat). Zweryfikowane: brak/zły klucz → 401, dobry → przechodzi.
+- **Ceny regionalne (kod, backward-compatible)** — `voivodeship` z `raw_location` (`extract_voivodeship`, regex), dodany do `feature_cols`/categorical w treningu + ścieżce predykcji; aktywne dopiero po retreningu (stary `.pkl` ignoruje). `CarInput.location` może je zasilić — **TODO: dodać pole do CarInput** (obecnie z `raw_location`).
+- **Wersjonowanie** — `stats`: `lightgbm_version`, `training_data_hash` (sha256 X_train), `model_version` (`<data>_qP10P50P90`); zwracane w `/predict`.
+- **SHAP / explanation** — `predict` zwraca top kontrybutorów (`pred_contrib`), defensywnie (błąd → None).
+- **Dockerfile** — non-root (uid 10001), HEALTHCHECK (/health, stdlib), domyślny `PORT`, abs ścieżka modelu (`MODEL_PATH`).
+- **psycopg2 import leniwy** (API nie wymaga sterownika DB) + `_read_sql` fallback (pandas 3.x bez SQLAlchemy).
+- **test_predictions.py** — kontrakt + niezmienniki (damaged<clean, +przebieg→taniej, nowszy>starszy, P10≤P50≤P90, voivodeship); 7/7 OK; **dodane do CI** (pip install + run).
+- **README drift** — 3.12→3.10, 636k→225k aktywnych, 18→19 cech, przykład odpowiedzi (confidence_level/model_version/explanation), zakres lat dynamiczny.
+
+## Wymaga zewn./infra (flaga — NADAL otwarte)
+Creds do live Postgres (**retrening** — kwantyle/log/regionalne aktywują się po nim; obecny `.pkl` to stary model) · object storage (registry, `.pkl` poza gitem) · proxy pool (scraper) · Redis (kolejka) · scheduler (retraining/cron) · drift monitoring (join valuations⋈car_listings) · znalezienie bulk-ingestion pipeline (poza repo).

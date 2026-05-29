@@ -1,13 +1,14 @@
-# UWAGA (P0): wersje niepinowane. Przypnij do wersji, które wytworzyły car_price_model.pkl
-# — zwłaszcza scikit-learn / lightgbm / numpy / joblib (pickle jest wrażliwy na wersje).
-# Zweryfikuj load modelu w czystym buildzie PRZED deployem. Patrz PLAN-ROZWOJU.md.
-fastapi
-uvicorn[standard]
-pydantic
-joblib
-scikit-learn
-pandas
-numpy
-lightgbm
-psycopg2-binary
-python-dotenv
+# Wersje PRZYPIĘTE i zweryfikowane: ładują commitowany car_price_model.pkl
+# oraz przechodzą predict + start API w czystym środowisku (Python 3.10/3.13).
+# pickle/joblib są wrażliwe na wersje — nie podbijaj bez ponownej weryfikacji load .pkl.
+# (load_data ma fallback kursorowy, więc retrening działa też na pandas 3.x.)
+fastapi==0.136.3
+uvicorn[standard]==0.48.0
+pydantic==2.13.4
+joblib==1.5.3
+scikit-learn==1.8.0
+pandas==3.0.3
+numpy==2.4.6
+lightgbm==4.6.0
+psycopg2-binary==2.9.12
+python-dotenv==1.2.2

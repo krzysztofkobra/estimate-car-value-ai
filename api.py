@@ -1,7 +1,7 @@
 import os
 import logging
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Header, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from typing import Optional
@@ -31,11 +31,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Ścieżka modelu niezależna od CWD (domyślnie obok pliku); nadpisywalna przez MODEL_PATH.
+MODEL_PATH = os.environ.get("MODEL_PATH") or os.path.join(
+    os.path.dirname(os.path.abspath(__file__)), "car_price_model.pkl"
+)
+
+# Opcjonalna autoryzacja: gdy ustawiono API_KEY, /predict wymaga nagłówka X-API-Key.
+# Gdy API_KEY nieustawiony → auth wyłączony (backward-compat, nie psuje istniejącego deploya).
+API_KEY = os.environ.get("API_KEY")
+
+
+def require_api_key(x_api_key: Optional[str] = Header(None)):
+    if API_KEY and x_api_key != API_KEY:
+        raise HTTPException(status_code=401, detail="Nieprawidłowy lub brakujący X-API-Key")
+
+
 predictor = CarPricePredictor()
 
 try:
-    predictor.load_model('car_price_model.pkl')
-    print("Model loaded successfully")
+    predictor.load_model(MODEL_PATH)
+    print(f"Model loaded successfully from {MODEL_PATH}")
 except Exception as e:
     print(f"Warning: Could not load model - {e}")
     predictor = None
@@ -62,6 +77,7 @@ class PredictionResponse(BaseModel):
     input_data: dict
     confidence_level: Optional[float] = None
     model_version: Optional[str] = None
+    explanation: Optional[list] = None  # top kontrybutorzy SHAP (jeśli dostępne)
 
 @app.get("/")
 def root():
@@ -85,7 +101,7 @@ def health_check():
     }
 
 @app.post("/predict", response_model=PredictionResponse)
-def predict_price(car: CarInput):
+def predict_price(car: CarInput, _auth=Depends(require_api_key)):
     if predictor is None or predictor.model is None:
         raise HTTPException(status_code=503, detail="Model not loaded")
 
@@ -116,7 +132,8 @@ def predict_price(car: CarInput):
             confidence_range=result['confidence_range'],
             input_data=car_dict,
             confidence_level=result.get('confidence_level'),
-            model_version=result.get('model_version')
+            model_version=result.get('model_version'),
+            explanation=result.get('explanation')
         )
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}")

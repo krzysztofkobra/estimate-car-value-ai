@@ -20,7 +20,7 @@ This microservice provides real-time car price predictions based on vehicle spec
 
 ## Tech Stack
 
-- **Python 3.12**
+- **Python 3.10** (zgodnie z `runtime.txt`)
 - **FastAPI** - Modern web framework for building APIs
 - **LightGBM** - Gradient boosting framework for machine learnings
 - **PostgreSQL** - Database for car listings
@@ -29,22 +29,28 @@ This microservice provides real-time car price predictions based on vehicle spec
 
 ## How It Works
 
-The model uses 18 features to predict car prices:
+The model uses 19 features to predict car prices (20 po retreningu — z województwem):
 
-### Base Features (13)
+### Base Features (14)
 - Make, model, year, body type, fuel type
 - Engine displacement (cc), engine power (HP)
 - Transmission, drive type, mileage
 - Seller type, damage status, color, steering side
 
 ### Engineered Features (5)
-- Car age (calculated from year)
+- Car age (liczony względem `reference_year` zapisanego przy treningu — bez driftu)
 - Mileage per year (mileage / age)
 - Power-to-displacement ratio
 - Average price for make
 - Average price for model
 
-The model automatically normalizes text inputs and handles missing values using LightGBM's native capabilities.
+### Regional (opt-in, aktywne po retreningu)
+- `voivodeship` — województwo wyciągane z `raw_location` ("Miasto (Województwo)")
+
+Cel uczony na **log1p(price)** (błąd skaluje się z ceną). Przedział ufności pochodzi z
+**3 modeli kwantylowych P10/P50/P90** (~80% pokrycia), nie ze sztywnego ±15%. Model normalizuje
+teksty i obsługuje braki natywnie (LightGBM). `/predict` może opcjonalnie wymagać nagłówka
+`X-API-Key` (gdy ustawiono `API_KEY`).
 
 ## API Endpoints
 
@@ -81,13 +87,18 @@ Predict car price based on vehicle specifications
 ```json
 {
   "predicted_price": 45000.0,
-  "confidence_range": {
-    "min": 38250.0,
-    "max": 51750.0
-  },
-  "input_data": { ... }
+  "confidence_range": { "min": 38250.0, "max": 51750.0 },
+  "input_data": { ... },
+  "confidence_level": 0.8,
+  "model_version": "2026-05-29T15:00:00_qP10P50P90",
+  "explanation": [
+    { "feature": "mileage", "direction": "down", "impact": -3200.0 },
+    { "feature": "year", "direction": "up", "impact": 2800.0 }
+  ]
 }
 ```
+`confidence_level`, `model_version` i `explanation` (top kontrybutorzy) pojawiają się dla modelu
+kwantylowego; stary `.pkl` zwraca tylko `predicted_price` + `confidence_range` (±15%).
 
 ## Installation & Setup
 
@@ -168,11 +179,12 @@ curl -X POST "http://localhost:8000/predict" \
 
 ## Model Performance
 
-Trained on ~636,000 car listings:
-- **MAE (Mean Absolute Error)**: 8,277 PLN
-- **R² Score**: 0.9
-- **Training time**: 2 minutes
+Trained on ~225,000 **aktywnych** ogłoszeń (filtr `is_active=true` — wcześniej ~966k łącznie ze sprzedanymi):
+- **MAE (Mean Absolute Error)**: ~8,277 PLN (P50, oryginalna skala)
+- **R² Score**: ~0.9
+- **Pokrycie przedziału [P10, P90]**: ~0.80
 - **Prediction time**: < 10ms per vehicle
+- Metryki per-segment cenowy (MAPE/coverage) dostępne w `GET /health` → `model_stats.segments`
 
 ## Project Structure
 
@@ -208,4 +220,4 @@ This microservice is part of [autoanaliza.pl](https://www.autoanaliza.pl), a com
 
 ---
 
-**Note**: This model is optimized for the Polish automotive market and works best with vehicles from 1990-2025 with prices between 1,000-3,000,000 PLN.
+**Note**: This model is optimized for the Polish automotive market and works best with vehicles from 1990 to (current year + 1) — górna granica roku jest dynamiczna — with prices between 1,000-3,000,000 PLN.
