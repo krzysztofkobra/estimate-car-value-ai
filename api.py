@@ -60,6 +60,8 @@ class PredictionResponse(BaseModel):
     predicted_price: float
     confidence_range: dict
     input_data: dict
+    confidence_level: Optional[float] = None
+    model_version: Optional[str] = None
 
 @app.get("/")
 def root():
@@ -112,7 +114,9 @@ def predict_price(car: CarInput):
         return PredictionResponse(
             predicted_price=result['predicted_price'],
             confidence_range=result['confidence_range'],
-            input_data=car_dict
+            input_data=car_dict,
+            confidence_level=result.get('confidence_level'),
+            model_version=result.get('model_version')
         )
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}")
