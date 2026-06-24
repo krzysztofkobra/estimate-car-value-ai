@@ -5,3 +5,15 @@ __pycache__/
 venv/
 build/
 dist/
+
+# secrets & local env
+.env.local
+.env.*.local
+*.pem
+*.key
+# dumps & logs
+*.sql.dump
+*.dump
+*.log
+# python
+*.pyc
